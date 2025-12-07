@@ -1,0 +1,38 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Environment variables
+.env
+
+# Data and caches
+data/
+*.arrow
+*.cache
+
+# Model checkpoints and outputs
+models/
+outputs/
+runs/
+
+# Logs
+logs/
+*.log
+
+# Jupyter notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/

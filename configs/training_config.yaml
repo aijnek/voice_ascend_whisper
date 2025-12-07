@@ -1,0 +1,52 @@
+training:
+  # Output directory
+  output_dir: ./models/checkpoints
+
+  # Batch configuration
+  per_device_train_batch_size: 4
+  per_device_eval_batch_size: 8
+  gradient_accumulation_steps: 4
+
+  # Training schedule
+  num_train_epochs: 3
+  max_steps: -1
+
+  # Optimization
+  learning_rate: 1e-3
+  warmup_steps: 500
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+
+  # Memory management
+  gradient_checkpointing: true
+  fp16: false
+  bf16: false
+
+  # Evaluation
+  eval_strategy: steps
+  eval_steps: 500
+  save_strategy: steps
+  save_steps: 500
+  save_total_limit: 3
+  load_best_model_at_end: true
+  metric_for_best_model: wer
+  greater_is_better: false
+
+  # Generation (for WER during training)
+  predict_with_generate: true
+  generation_max_length: 225
+
+  # Logging
+  logging_steps: 100
+  logging_first_step: true
+  report_to:
+    - tensorboard
+
+  # DataLoader
+  dataloader_num_workers: 2
+  remove_unused_columns: false
+
+  # Model configuration
+  model_name: openai/whisper-small
+  language: Hindi
+  task: transcribe

@@ -1,0 +1,16 @@
+dataset:
+  data_dir: ./data
+  language: hi
+  sampling_rate: 16000
+  max_duration_seconds: 30
+  min_duration_seconds: 1
+  cache_dir: ./data/cache
+  num_proc: 4
+
+  # Text normalization options
+  lowercase: true
+  remove_punctuation: false
+  normalize_unicode: true
+
+  # Streaming mode (set to true if memory-constrained)
+  streaming: false
