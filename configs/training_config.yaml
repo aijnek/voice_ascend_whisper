@@ -13,7 +13,7 @@ training:
 
   # Optimization
   learning_rate: 0.001
-  warmup_steps: 500
+  warmup_steps: 200
   weight_decay: 0.01
   max_grad_norm: 1.0
 
@@ -24,10 +24,10 @@ training:
 
   # Evaluation
   eval_strategy: steps
-  eval_steps: 500  # Evaluate every 500 steps
-  max_eval_samples: -1  # Use full validation dataset
+  eval_steps: 100  # Evaluate every 100 steps
+  max_eval_samples: 300  # Use partial validation dataset (-1 for full dataset)
   save_strategy: steps
-  save_steps: 500  # Save checkpoint every 500 steps
+  save_steps: 100  # Save checkpoint every 100 steps
   save_total_limit: 3
   load_best_model_at_end: true
   metric_for_best_model: wer

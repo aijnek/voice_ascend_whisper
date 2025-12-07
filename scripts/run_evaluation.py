@@ -103,9 +103,9 @@ def main():
             device=device,
         )
 
-        # Load processor
+        # Load processor from base model (checkpoints don't have processor files)
         print("\nLoading processor...")
-        processor = WhisperProcessor.from_pretrained(str(model_path))
+        processor = WhisperProcessor.from_pretrained(args.base_model)
 
     model.eval()
 
