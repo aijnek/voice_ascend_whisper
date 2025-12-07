@@ -10,6 +10,7 @@ from datasets import load_from_disk
 from tqdm import tqdm
 from transformers import WhisperProcessor
 
+from transformers import WhisperForConditionalGeneration
 from voice_ascend_whisper.models.lora_whisper import load_lora_whisper
 from voice_ascend_whisper.utils.device import get_device, clear_mps_cache
 from voice_ascend_whisper.utils.metrics import (
@@ -31,8 +32,8 @@ def main():
     parser.add_argument(
         "--model",
         type=str,
-        default="models/final",
-        help="Path to fine-tuned LoRA model directory",
+        default=None,
+        help="Path to fine-tuned LoRA model directory (None = use base model only)",
     )
     parser.add_argument(
         "--base-model",
@@ -80,23 +81,33 @@ def main():
     print("LOADING MODEL")
     print("=" * 70)
 
-    model_path = Path(args.model)
-    if not model_path.exists():
-        raise FileNotFoundError(f"Model not found at {model_path}")
+    if args.model is None:
+        # Use base model without LoRA
+        print(f"Using base model: {args.base_model}")
+        model = WhisperForConditionalGeneration.from_pretrained(args.base_model)
+        if device:
+            model = model.to(device)
+        processor = WhisperProcessor.from_pretrained(args.base_model)
+        model_path = None
+    else:
+        # Use fine-tuned LoRA model
+        model_path = Path(args.model)
+        if not model_path.exists():
+            raise FileNotFoundError(f"Model not found at {model_path}")
 
-    print(f"Loading model from: {model_path}")
+        print(f"Loading model from: {model_path}")
 
-    model = load_lora_whisper(
-        base_model_name=args.base_model,
-        adapter_path=str(model_path),
-        device=device,
-    )
+        model = load_lora_whisper(
+            base_model_name=args.base_model,
+            adapter_path=str(model_path),
+            device=device,
+        )
+
+        # Load processor
+        print("\nLoading processor...")
+        processor = WhisperProcessor.from_pretrained(str(model_path))
 
     model.eval()
-
-    # Load processor
-    print("\nLoading processor...")
-    processor = WhisperProcessor.from_pretrained(str(model_path))
 
     # Load dataset
     print("\n" + "=" * 70)
@@ -228,8 +239,9 @@ def main():
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     results = {
-        "model_path": str(model_path),
+        "model_path": str(model_path) if model_path else None,
         "base_model": args.base_model,
+        "is_finetuned": model_path is not None,
         "split": args.split,
         "num_samples": len(predictions),
         "wer": wer,

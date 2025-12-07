@@ -70,6 +70,21 @@ def main():
     for split_name, split_data in dataset.items():
         print(f"{split_name}: {len(split_data)} examples")
 
+    # Limit eval dataset size for quick testing
+    max_eval_samples = configs["training"].get("max_eval_samples", -1)
+    if max_eval_samples > 0:
+        print(f"\nLimiting eval dataset to {max_eval_samples} samples for quick testing")
+        if "validation" in dataset:
+            dataset["validation"] = dataset["validation"].select(
+                range(min(max_eval_samples, len(dataset["validation"])))
+            )
+            print(f"Validation dataset reduced to: {len(dataset['validation'])} examples")
+        elif "test" in dataset:
+            dataset["test"] = dataset["test"].select(
+                range(min(max_eval_samples, len(dataset["test"])))
+            )
+            print(f"Test dataset reduced to: {len(dataset['test'])} examples")
+
     # Create processor
     print("\n" + "=" * 70)
     print("CREATING PROCESSOR")
@@ -86,13 +101,20 @@ def main():
     print("CREATING LORA MODEL")
     print("=" * 70)
 
+    # Get continue_from_checkpoint parameter (if provided)
+    continue_checkpoint = configs["training"].get("continue_from_checkpoint")
+
     model = create_lora_whisper(
         base_model_name=configs["training"]["model_name"],
         lora_config=configs["lora"],
         device=device,
+        continue_from_checkpoint=continue_checkpoint,
     )
 
     # Set language and task for generation
+    # Use language and task instead of forced_decoder_ids (deprecated)
+    model.generation_config.language = configs["training"]["language"].lower()
+    model.generation_config.task = configs["training"]["task"]
     model.config.forced_decoder_ids = None
     model.config.suppress_tokens = []
 
@@ -125,6 +147,7 @@ def main():
         per_device_eval_batch_size=training_config["per_device_eval_batch_size"],
         gradient_accumulation_steps=training_config["gradient_accumulation_steps"],
         num_train_epochs=training_config["num_train_epochs"],
+        max_steps=training_config["max_steps"],
         learning_rate=training_config["learning_rate"],
         warmup_steps=training_config["warmup_steps"],
         weight_decay=training_config["weight_decay"],
@@ -147,6 +170,7 @@ def main():
         report_to=training_config["report_to"],
         dataloader_num_workers=training_config["dataloader_num_workers"],
         remove_unused_columns=training_config["remove_unused_columns"],
+        label_names=["labels"],  # Required for PEFT compatibility
         push_to_hub=False,
     )
 
@@ -172,7 +196,7 @@ def main():
         eval_dataset=dataset.get("validation", dataset.get("test")),
         data_collator=data_collator,
         compute_metrics=compute_metrics,
-        tokenizer=processor.feature_extractor,
+        processing_class=processor.tokenizer,
     )
 
     print("Trainer created successfully!")
@@ -192,25 +216,29 @@ def main():
         # Clear MPS cache after training
         clear_mps_cache()
 
-        # Save final model
+        # Save best model (permanent, won't be deleted by save_total_limit)
         print("\n" + "=" * 70)
-        print("SAVING FINAL MODEL")
+        print("SAVING BEST MODEL")
         print("=" * 70)
 
-        final_output_dir = Path("models/final")
-        final_output_dir.mkdir(parents=True, exist_ok=True)
+        best_model_dir = Path("models/best")
+        best_model_dir.mkdir(parents=True, exist_ok=True)
 
-        print(f"Saving LoRA adapters to: {final_output_dir}")
-        model.save_pretrained(str(final_output_dir))
-        processor.save_pretrained(str(final_output_dir))
-
-        print("Model saved successfully!")
+        # Best model is automatically loaded if load_best_model_at_end=True
+        print(f"Saving best model (by {training_config.get('metric_for_best_model', 'wer')})")
+        print(f"Saving to: {best_model_dir}")
+        model.save_pretrained(str(best_model_dir))
+        processor.save_pretrained(str(best_model_dir))
+        print("Best model saved successfully!")
 
         # Print training summary
         print("\n" + "=" * 70)
         print("TRAINING COMPLETE!")
         print("=" * 70)
-        print(f"Final model saved to: {final_output_dir}")
+        print(f"\nBest model (by {training_config.get('metric_for_best_model', 'wer')}) saved to: {best_model_dir}")
+        print(f"Recent checkpoints: {training_config['output_dir']}")
+        print(f"\nTo use the best model for inference or evaluation:")
+        print(f"  Model path: {best_model_dir}")
         print("\nNext steps:")
         print("  1. Evaluate: uv run python scripts/evaluate.py")
         print("  2. Inference: uv run python scripts/inference.py --audio <path>")

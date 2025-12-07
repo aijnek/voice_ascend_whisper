@@ -73,16 +73,22 @@ def compute_detailed_metrics(predictions: list[str], references: list[str]) -> d
     """
     import jiwer
 
-    # Compute all measures
-    measures = jiwer.compute_measures(references, predictions)
+    # Compute WER and related metrics
+    wer = jiwer.wer(references, predictions)
+    mer = jiwer.mer(references, predictions)
+    wil = jiwer.wil(references, predictions)
+    wip = jiwer.wip(references, predictions)
+
+    # Get detailed operation counts
+    output = jiwer.process_words(references, predictions)
 
     return {
-        "wer": measures["wer"] * 100,  # Convert to percentage
-        "mer": measures["mer"] * 100,  # Match Error Rate
-        "wil": measures["wil"] * 100,  # Word Information Lost
-        "wip": measures["wip"] * 100,  # Word Information Preserved
-        "substitutions": measures["substitutions"],
-        "deletions": measures["deletions"],
-        "insertions": measures["insertions"],
-        "hits": measures["hits"],
+        "wer": wer * 100,  # Convert to percentage
+        "mer": mer * 100,  # Match Error Rate
+        "wil": wil * 100,  # Word Information Lost
+        "wip": wip * 100,  # Word Information Preserved
+        "substitutions": output.substitutions,
+        "deletions": output.deletions,
+        "insertions": output.insertions,
+        "hits": output.hits,
     }
