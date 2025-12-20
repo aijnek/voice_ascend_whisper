@@ -13,7 +13,7 @@ from loguru import logger
 
 from webapp.config import get_settings
 from webapp.database import create_db_and_tables, get_session
-from webapp.routes import texts
+from webapp.routes import texts, recordings, audio
 
 
 @asynccontextmanager
@@ -71,6 +71,8 @@ app.state.templates = templates
 
 # Include routers
 app.include_router(texts.router, prefix="/texts", tags=["texts"])
+app.include_router(recordings.router, prefix="/recordings", tags=["recordings"])
+app.include_router(audio.router, prefix="/audio", tags=["audio"])
 
 
 @app.get("/")

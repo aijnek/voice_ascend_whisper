@@ -1,0 +1,363 @@
+{% extends "base.html" %}
+
+{% block title %}録音 - Voice Ascend Whisper{% endblock %}
+
+{% block extra_head %}
+<style>
+    .recording-controls {
+        text-align: center;
+        margin: 2rem 0;
+    }
+
+    .recording-status {
+        padding: 1rem;
+        margin: 1rem 0;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .recording-status.idle {
+        background-color: #f0f0f0;
+    }
+
+    .recording-status.recording {
+        background-color: #ffebee;
+        border: 2px solid #e53935;
+    }
+
+    .recording-status.processing {
+        background-color: #fff3e0;
+    }
+
+    .recording-status.success {
+        background-color: #e8f5e9;
+    }
+
+    .recording-timer {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #e53935;
+        margin: 1rem 0;
+    }
+
+    .text-display {
+        font-size: 1.5rem;
+        padding: 2rem;
+        background-color: #f5f5f5;
+        border-radius: 8px;
+        margin: 2rem 0;
+        text-align: center;
+        min-height: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .record-button {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        font-size: 1.5rem;
+        margin: 1rem auto;
+        display: block;
+    }
+
+    .record-button.recording {
+        background-color: #e53935;
+        animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+
+    #audioPlayback {
+        margin: 1rem 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1>録音</h1>
+
+<!-- Text Selection -->
+<div>
+    <div class="grid">
+        <div>
+            <label for="textSelect">
+                テキストを選択
+                <select id="textSelect" onchange="selectText()">
+                    <option value="">-- テキストを選択してください --</option>
+                    {% for text in texts %}
+                    <option value="{{ text.id }}" {% if selected_text and selected_text.id == text.id %}selected{% endif %}>
+                        [ID: {{ text.id }}] {% if text.content|length > 80 %}{{ text.content[:80] }}...{% else %}{{ text.content }}{% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
+            </label>
+        </div>
+        <div style="display: flex; align-items: flex-end;">
+            <label>
+                <input type="checkbox" id="showAllToggle" {% if show_all %}checked{% endif %} onchange="toggleShowAll()">
+                録音済みも表示
+            </label>
+        </div>
+    </div>
+
+    {% if not texts %}
+    <p>
+        {% if show_all %}
+        すべてのテキストが録音済みです。
+        {% else %}
+        録音されていないテキストがありません。
+        {% endif %}
+        <a href="/texts/new" role="button">新しいテキストを追加</a>
+    </p>
+    {% endif %}
+</div>
+
+<!-- Text Display -->
+<div class="text-display" id="textDisplay">
+    {% if selected_text %}
+        {{ selected_text.content }}
+    {% else %}
+        上のリストからテキストを選択してください
+    {% endif %}
+</div>
+
+<!-- Recording Status -->
+<div class="recording-status idle" id="statusDisplay">
+    <div id="statusMessage">録音準備完了</div>
+    <div class="recording-timer" id="timer" style="display: none;">00:00</div>
+</div>
+
+<!-- Recording Controls -->
+<div class="recording-controls">
+    <button
+        id="recordButton"
+        class="record-button"
+        onclick="toggleRecording()"
+        disabled
+    >
+        🎤 録音開始
+    </button>
+
+    <div id="playbackSection" style="display: none;">
+        <h3>録音プレビュー</h3>
+        <audio id="audioPlayback" controls></audio>
+        <div>
+            <button onclick="saveRecording()" class="primary">保存</button>
+            <button onclick="discardRecording()" class="secondary">破棄</button>
+        </div>
+    </div>
+</div>
+
+<!-- Results -->
+<div id="resultMessage"></div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="/static/js/recorder.js"></script>
+<script>
+let recorder = null;
+let selectedTextId = null;
+let recordedBlob = null;
+let timerInterval = null;
+let recordingStartTime = null;
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    // Check browser support
+    if (!AudioRecorder.isSupported()) {
+        document.getElementById('statusMessage').textContent = 'お使いのブラウザは音声録音に対応していません';
+        document.getElementById('recordButton').disabled = true;
+        return;
+    }
+
+    recorder = new AudioRecorder();
+
+    // Pre-select text if provided
+    {% if selected_text %}
+    selectedTextId = {{ selected_text.id }};
+    document.getElementById('recordButton').disabled = false;
+    {% endif %}
+});
+
+// Toggle show all texts
+function toggleShowAll() {
+    const showAll = document.getElementById('showAllToggle').checked;
+    const currentUrl = new URL(window.location.href);
+    if (showAll) {
+        currentUrl.searchParams.set('show_all', 'true');
+    } else {
+        currentUrl.searchParams.delete('show_all');
+    }
+    window.location.href = currentUrl.toString();
+}
+
+// Select text
+function selectText() {
+    const select = document.getElementById('textSelect');
+    selectedTextId = select.value ? parseInt(select.value) : null;
+
+    if (selectedTextId) {
+        // Fetch text content
+        const option = select.options[select.selectedIndex];
+        const textContent = option.textContent.replace(/^\[ID: \d+\]\s*/, '');
+        document.getElementById('textDisplay').textContent = textContent;
+        document.getElementById('recordButton').disabled = false;
+    } else {
+        document.getElementById('textDisplay').textContent = '上のリストからテキストを選択してください';
+        document.getElementById('recordButton').disabled = true;
+    }
+
+    // Hide playback section when changing text
+    document.getElementById('playbackSection').style.display = 'none';
+}
+
+// Toggle recording
+async function toggleRecording() {
+    if (!recorder.isRecording) {
+        await startRecording();
+    } else {
+        await stopRecording();
+    }
+}
+
+// Start recording
+async function startRecording() {
+    if (!selectedTextId) {
+        alert('テキストを選択してください');
+        return;
+    }
+
+    try {
+        await recorder.start();
+
+        // Update UI
+        const button = document.getElementById('recordButton');
+        button.textContent = '⬛ 停止';
+        button.classList.add('recording');
+
+        const status = document.getElementById('statusDisplay');
+        status.className = 'recording-status recording';
+        document.getElementById('statusMessage').textContent = '録音中...';
+        document.getElementById('timer').style.display = 'block';
+
+        // Start timer
+        recordingStartTime = Date.now();
+        updateTimer();
+        timerInterval = setInterval(updateTimer, 100);
+
+        // Hide playback section
+        document.getElementById('playbackSection').style.display = 'none';
+    } catch (error) {
+        alert(error.message);
+    }
+}
+
+// Stop recording
+async function stopRecording() {
+    try {
+        recordedBlob = await recorder.stop();
+
+        // Stop timer
+        clearInterval(timerInterval);
+
+        // Update UI
+        const button = document.getElementById('recordButton');
+        button.textContent = '🎤 録音開始';
+        button.classList.remove('recording');
+
+        const status = document.getElementById('statusDisplay');
+        status.className = 'recording-status idle';
+        document.getElementById('statusMessage').textContent = '録音完了';
+        document.getElementById('timer').style.display = 'none';
+
+        // Show playback
+        showPlayback();
+    } catch (error) {
+        alert('録音の停止に失敗しました: ' + error.message);
+    }
+}
+
+// Update timer display
+function updateTimer() {
+    const elapsed = (Date.now() - recordingStartTime) / 1000;
+    const minutes = Math.floor(elapsed / 60);
+    const seconds = Math.floor(elapsed % 60);
+    document.getElementById('timer').textContent =
+        `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+// Show playback
+function showPlayback() {
+    const audioElement = document.getElementById('audioPlayback');
+    audioElement.src = URL.createObjectURL(recordedBlob);
+    document.getElementById('playbackSection').style.display = 'block';
+}
+
+// Save recording
+async function saveRecording() {
+    if (!recordedBlob || !selectedTextId) {
+        alert('録音データがありません');
+        return;
+    }
+
+    // Update UI
+    const status = document.getElementById('statusDisplay');
+    status.className = 'recording-status processing';
+    document.getElementById('statusMessage').textContent = 'アップロード中...';
+    document.getElementById('recordButton').disabled = true;
+
+    try {
+        const result = await recorder.uploadToServer(selectedTextId, recordedBlob);
+
+        // Success
+        status.className = 'recording-status success';
+        document.getElementById('statusMessage').textContent = result.message;
+
+        // Show result
+        document.getElementById('resultMessage').innerHTML = `
+            <article>
+                <h4>✅ 録音が保存されました</h4>
+                <p>録音ID: ${result.recording.id}</p>
+                <p>長さ: ${result.recording.duration.toFixed(2)}秒</p>
+                <p><a href="/recordings/">録音一覧を見る</a></p>
+            </article>
+        `;
+
+        // Reset
+        setTimeout(() => {
+            resetRecording();
+        }, 3000);
+    } catch (error) {
+        status.className = 'recording-status idle';
+        document.getElementById('statusMessage').textContent = 'アップロード失敗';
+        alert('保存に失敗しました: ' + error.message);
+        document.getElementById('recordButton').disabled = false;
+    }
+}
+
+// Discard recording
+function discardRecording() {
+    if (confirm('録音を破棄しますか?')) {
+        resetRecording();
+    }
+}
+
+// Reset recording state
+function resetRecording() {
+    recordedBlob = null;
+    document.getElementById('playbackSection').style.display = 'none';
+    document.getElementById('resultMessage').innerHTML = '';
+
+    const status = document.getElementById('statusDisplay');
+    status.className = 'recording-status idle';
+    document.getElementById('statusMessage').textContent = '録音準備完了';
+
+    document.getElementById('recordButton').disabled = false;
+}
+</script>
+{% endblock %}

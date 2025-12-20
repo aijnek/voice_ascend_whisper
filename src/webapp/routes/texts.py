@@ -13,7 +13,7 @@ from webapp.services.text_service import TextService
 from webapp.models.text import Text, TextCreate, TextUpdate
 
 
-router = APIRouter()
+router = APIRouter(default_response_class=HTMLResponse)
 
 
 def get_templates(request: Request):

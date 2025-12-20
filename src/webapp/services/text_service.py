@@ -3,9 +3,10 @@
 from datetime import datetime
 from typing import Optional
 
-from sqlmodel import Session, select
+from sqlmodel import Session, select, func
 
 from webapp.models.text import Text, TextCreate, TextUpdate
+from webapp.models.recording import Recording
 
 
 class TextService:
@@ -154,3 +155,33 @@ class TextService:
         for db_text in db_texts:
             session.refresh(db_text)
         return db_texts
+
+    @staticmethod
+    def get_texts_without_recordings(
+        session: Session,
+        skip: int = 0,
+        limit: int = 100,
+        language: Optional[str] = None,
+    ) -> list[Text]:
+        """Get texts that don't have any recordings yet.
+
+        Args:
+            session: Database session
+            skip: Number of records to skip
+            limit: Maximum number of records to return
+            language: Filter by language code
+
+        Returns:
+            List of Text instances without recordings
+        """
+        # Subquery to get text IDs that have recordings
+        recorded_text_ids = select(Recording.text_id).distinct()
+
+        # Main query to get texts without recordings
+        statement = select(Text).where(Text.id.not_in(recorded_text_ids))
+
+        if language:
+            statement = statement.where(Text.language == language)
+
+        statement = statement.offset(skip).limit(limit).order_by(Text.created_at.desc())
+        return list(session.exec(statement).all())

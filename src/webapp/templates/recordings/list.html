@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}録音一覧 - Voice Ascend Whisper{% endblock %}
+
+{% block content %}
+<h1>録音一覧</h1>
+
+<div class="grid">
+    <div>
+        <a href="/recordings/record" role="button">新規録音</a>
+    </div>
+</div>
+
+<!-- Filters -->
+<details>
+    <summary>フィルター</summary>
+    <form method="get" action="/recordings/">
+        <div class="grid">
+            <label>
+                テキストID
+                <input type="number" name="text_id" value="{{ text_id or '' }}" placeholder="テキストIDで絞り込み">
+            </label>
+            <label>
+                検証済みのみ
+                <input type="checkbox" name="validated_only" {% if validated_only %}checked{% endif %}>
+            </label>
+            <div>
+                <button type="submit">適用</button>
+                <a href="/recordings/" role="button" class="secondary">リセット</a>
+            </div>
+        </div>
+    </form>
+</details>
+
+<div id="recording-list">
+    {% if recordings %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>テキスト</th>
+                <th>長さ</th>
+                <th>ファイルサイズ</th>
+                <th>検証</th>
+                <th>作成日</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for recording in recordings %}
+            <tr>
+                <td>{{ recording.id }}</td>
+                <td>
+                    {% if recording.text %}
+                        <a href="/texts/{{ recording.text_id }}">
+                            {% if recording.text.content|length > 30 %}
+                                {{ recording.text.content[:30] }}...
+                            {% else %}
+                                {{ recording.text.content }}
+                            {% endif %}
+                        </a>
+                    {% else %}
+                        テキストID: {{ recording.text_id }}
+                    {% endif %}
+                </td>
+                <td>{{ "%.2f"|format(recording.duration) }}秒</td>
+                <td>{{ (recording.file_size / 1024)|round(1) }} KB</td>
+                <td>
+                    {% if recording.is_validated %}
+                        <span style="color: green;">✓ 検証済み</span>
+                    {% else %}
+                        <span style="color: gray;">未検証</span>
+                    {% endif %}
+                </td>
+                <td>{{ recording.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>
+                    <!-- Audio Player -->
+                    <audio controls style="max-width: 200px;">
+                        <source src="/audio/{{ recording.id }}" type="audio/wav">
+                    </audio>
+
+                    <!-- Validate Button -->
+                    {% if not recording.is_validated %}
+                    <button
+                        hx-put="/recordings/{{ recording.id }}/validate"
+                        hx-target="#recording-list"
+                        hx-vals='{"is_validated": "true"}'
+                        class="secondary outline"
+                        style="font-size: 0.8rem;"
+                    >
+                        ✓
+                    </button>
+                    {% endif %}
+
+                    <!-- Delete Button -->
+                    <button
+                        hx-delete="/recordings/{{ recording.id }}"
+                        hx-target="#recording-list"
+                        hx-confirm="本当に削除しますか?"
+                        class="contrast outline"
+                        style="font-size: 0.8rem;"
+                    >
+                        削除
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <p>
+        <small>合計: {{ recordings|length }}件の録音</small>
+    </p>
+    {% else %}
+    <article>
+        <p>録音がまだありません。</p>
+        <p><a href="/recordings/record">新規録音を追加</a>してください。</p>
+    </article>
+    {% endif %}
+</div>
+{% endblock %}
