@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}テキスト詳細 - Voice Ascend Whisper{% endblock %}
+
+{% block content %}
+<h1>テキスト詳細</h1>
+
+<article>
+    <header>
+        <strong>ID: {{ text.id }}</strong>
+    </header>
+
+    <table>
+        <tbody>
+            <tr>
+                <th scope="row">テキスト内容</th>
+                <td>{{ text.content }}</td>
+            </tr>
+            <tr>
+                <th scope="row">説明</th>
+                <td>{{ text.description or '-' }}</td>
+            </tr>
+            <tr>
+                <th scope="row">ソース</th>
+                <td>{{ text.source }}</td>
+            </tr>
+            <tr>
+                <th scope="row">言語</th>
+                <td>{{ text.language }}</td>
+            </tr>
+            <tr>
+                <th scope="row">タグ</th>
+                <td>{{ text.tags or '-' }}</td>
+            </tr>
+            <tr>
+                <th scope="row">作成日時</th>
+                <td>{{ text.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+            </tr>
+            <tr>
+                <th scope="row">更新日時</th>
+                <td>{{ text.updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <footer>
+        <div class="grid">
+            <a href="/texts/{{ text.id }}/edit" role="button">編集</a>
+            <button
+                hx-delete="/texts/{{ text.id }}"
+                hx-target="body"
+                hx-confirm="本当に削除しますか?"
+                class="contrast"
+            >
+                削除
+            </button>
+            <a href="/texts/" role="button" class="secondary">一覧に戻る</a>
+        </div>
+    </footer>
+</article>
+{% endblock %}

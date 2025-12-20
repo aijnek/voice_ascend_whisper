@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Voice Ascend Whisper{% endblock %}</title>
+
+    <!-- Pico CSS -->
+    <link rel="stylesheet" href="/static/vendor/pico.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/custom.css">
+
+    <!-- HTMX -->
+    <script src="/static/vendor/htmx.min.js"></script>
+
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <!-- Header -->
+    <header class="container">
+        <nav>
+            <ul>
+                <li><strong>Voice Ascend Whisper</strong></li>
+            </ul>
+            <ul>
+                <li><a href="/index">ダッシュボード</a></li>
+                <li><a href="/texts/">テキスト</a></li>
+                <li><a href="#recordings">録音</a></li>
+                <li><a href="#datasets">データセット</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+        {% if message %}
+        <article class="message">
+            {{ message }}
+        </article>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="container">
+        <small>
+            Voice Ascend Whisper - 日本語音声データ収集アプリ v0.1.0
+        </small>
+    </footer>
+
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

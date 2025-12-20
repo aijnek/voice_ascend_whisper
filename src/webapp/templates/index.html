@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}ダッシュボード - Voice Ascend Whisper{% endblock %}
+
+{% block content %}
+<h1>ダッシュボード</h1>
+
+<div class="grid">
+    <article>
+        <header><strong>テキスト</strong></header>
+        <p>登録テキスト数: {{ text_count }}</p>
+        <footer>
+            <a href="/texts/" role="button">テキスト管理</a>
+        </footer>
+    </article>
+
+    <article>
+        <header><strong>録音</strong></header>
+        <p>録音数: {{ recording_count }}</p>
+        <footer>
+            <a href="#recordings" role="button" class="secondary">録音管理</a>
+        </footer>
+    </article>
+
+    <article>
+        <header><strong>データセット</strong></header>
+        <p>準備中...</p>
+        <footer>
+            <a href="#datasets" role="button" class="contrast">エクスポート</a>
+        </footer>
+    </article>
+</div>
+
+<section>
+    <h2>クイックスタート</h2>
+    <ol>
+        <li><a href="/texts/new">テキストを追加</a>する</li>
+        <li>テキストを選択して音声を録音する</li>
+        <li>データセットをエクスポートする</li>
+        <li>ML pipelineで学習する</li>
+    </ol>
+</section>
+{% endblock %}

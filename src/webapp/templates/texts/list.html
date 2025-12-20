@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}テキスト一覧 - Voice Ascend Whisper{% endblock %}
+
+{% block content %}
+<h1>テキスト一覧</h1>
+
+<div class="grid">
+    <div>
+        <a href="/texts/new" role="button">新規テキスト追加</a>
+    </div>
+</div>
+
+<div id="text-list">
+    {% if texts %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>テキスト</th>
+                <th>説明</th>
+                <th>ソース</th>
+                <th>タグ</th>
+                <th>作成日</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for text in texts %}
+            <tr>
+                <td>{{ text.id }}</td>
+                <td>
+                    {% if text.content|length > 50 %}
+                        {{ text.content[:50] }}...
+                    {% else %}
+                        {{ text.content }}
+                    {% endif %}
+                </td>
+                <td>{{ text.description or '-' }}</td>
+                <td>{{ text.source }}</td>
+                <td>{{ text.tags or '-' }}</td>
+                <td>{{ text.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>
+                    <a href="/texts/{{ text.id }}/edit" role="button" class="secondary outline">編集</a>
+                    <button
+                        hx-delete="/texts/{{ text.id }}"
+                        hx-target="#text-list"
+                        hx-confirm="本当に削除しますか?"
+                        class="contrast outline"
+                    >
+                        削除
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <article>
+        <p>テキストがまだ登録されていません。</p>
+        <p><a href="/texts/new">新規テキストを追加</a>してください。</p>
+    </article>
+    {% endif %}
+</div>
+{% endblock %}

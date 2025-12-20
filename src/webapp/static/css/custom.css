@@ -1,0 +1,30 @@
+/* Custom styles for Voice Ascend Whisper */
+
+/* Message styling */
+.message {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background-color: var(--pico-primary-background);
+    border-left: 4px solid var(--pico-primary);
+}
+
+/* Table button styling */
+table button,
+table a[role="button"] {
+    margin: 0.25rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+/* Grid layout adjustments */
+.grid {
+    gap: 1rem;
+}
+
+/* Footer styling */
+footer.container {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--pico-muted-border-color);
+    text-align: center;
+}

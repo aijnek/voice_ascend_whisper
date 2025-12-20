@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}
+{% if mode == 'create' %}
+テキスト追加 - Voice Ascend Whisper
+{% else %}
+テキスト編集 - Voice Ascend Whisper
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<h1>
+{% if mode == 'create' %}
+テキスト追加
+{% else %}
+テキスト編集
+{% endif %}
+</h1>
+
+<form
+    {% if mode == 'create' %}
+    hx-post="/texts/"
+    {% else %}
+    hx-put="/texts/{{ text.id }}"
+    {% endif %}
+    hx-target="#text-list"
+    hx-swap="innerHTML"
+>
+    <label>
+        テキスト内容 <span style="color: red;">*</span>
+        <textarea
+            name="content"
+            placeholder="読み上げるテキストを入力してください（最大500文字）"
+            maxlength="500"
+            rows="4"
+            required
+        >{% if text %}{{ text.content }}{% endif %}</textarea>
+        <small>読み上げる日本語テキストを入力してください。</small>
+    </label>
+
+    <label>
+        説明
+        <input
+            type="text"
+            name="description"
+            placeholder="このテキストの説明（任意）"
+            value="{% if text %}{{ text.description or '' }}{% endif %}"
+        >
+    </label>
+
+    <label>
+        タグ
+        <input
+            type="text"
+            name="tags"
+            placeholder="タグ（カンマ区切り、例: 挨拶,ビジネス）"
+            value="{% if text %}{{ text.tags or '' }}{% endif %}"
+        >
+    </label>
+
+    <label>
+        ソース
+        <select name="source">
+            <option value="manual" {% if not text or text.source == 'manual' %}selected{% endif %}>手動入力</option>
+            <option value="imported" {% if text and text.source == 'imported' %}selected{% endif %}>インポート</option>
+            <option value="llm_generated" {% if text and text.source == 'llm_generated' %}selected{% endif %}>LLM生成</option>
+        </select>
+    </label>
+
+    <label>
+        言語
+        <select name="language">
+            <option value="ja" {% if not text or text.language == 'ja' %}selected{% endif %}>日本語</option>
+            <option value="en" {% if text and text.language == 'en' %}selected{% endif %}>英語</option>
+        </select>
+    </label>
+
+    <div class="grid">
+        <button type="submit">
+            {% if mode == 'create' %}
+            追加
+            {% else %}
+            更新
+            {% endif %}
+        </button>
+        <a href="/texts/" role="button" class="secondary">キャンセル</a>
+    </div>
+</form>
+{% endblock %}
