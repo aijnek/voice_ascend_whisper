@@ -109,7 +109,7 @@
     </table>
 
     <p>
-        <small>合計: {{ recordings|length }}件の録音</small>
+        <small>合計: {{ recordings|length }}件の録音 / {{ "%.2f"|format(total_duration) }}秒 ({{ "%.2f"|format(total_duration / 60) }}分)</small>
     </p>
     {% else %}
     <article>

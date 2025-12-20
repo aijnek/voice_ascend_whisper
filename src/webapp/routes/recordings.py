@@ -46,6 +46,9 @@ async def list_recordings(
         validated_only=validated_only,
     )
 
+    # Calculate total duration
+    total_duration = sum(recording.duration for recording in recordings)
+
     return templates.TemplateResponse(
         "recordings/list.html",
         {
@@ -53,6 +56,7 @@ async def list_recordings(
             "recordings": recordings,
             "text_id": text_id,
             "validated_only": validated_only,
+            "total_duration": total_duration,
         }
     )
 
@@ -201,12 +205,16 @@ async def delete_recording(
     # Return updated recording list
     recordings = RecordingService.get_recordings(session=session)
 
+    # Calculate total duration
+    total_duration = sum(recording.duration for recording in recordings)
+
     return templates.TemplateResponse(
         "recordings/list.html",
         {
             "request": request,
             "recordings": recordings,
             "message": "録音を削除しました",
+            "total_duration": total_duration,
         }
     )
 
@@ -235,6 +243,9 @@ async def validate_recording(
     # Return updated recording list
     recordings = RecordingService.get_recordings(session=session)
 
+    # Calculate total duration
+    total_duration = sum(recording.duration for recording in recordings)
+
     status_text = "検証済み" if is_validated else "未検証"
     return templates.TemplateResponse(
         "recordings/list.html",
@@ -242,5 +253,6 @@ async def validate_recording(
             "request": request,
             "recordings": recordings,
             "message": f"録音を{status_text}にマークしました",
+            "total_duration": total_duration,
         }
     )
