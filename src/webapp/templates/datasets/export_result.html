@@ -1,0 +1,55 @@
+{% if success %}
+<article style="background-color: #e8f5e9; border: 2px solid #4caf50;">
+    <header>
+        <h3>✅ エクスポート成功</h3>
+    </header>
+    <p><strong>データセット名:</strong> {{ export.name }}</p>
+    <p><strong>エクスポートパス:</strong> <code>data/webapp/{{ export.export_path }}</code></p>
+
+    <h4>統計情報</h4>
+    <ul>
+        <li><strong>総録音数:</strong> {{ export.total_recordings }}</li>
+        <li><strong>訓練データ:</strong> {{ export.train_count }} ({{ export.train_ratio }}%)</li>
+        <li><strong>検証データ:</strong> {{ export.dev_count }} ({{ export.dev_ratio }}%)</li>
+        <li><strong>テストデータ:</strong> {{ export.test_count }} ({{ export.test_ratio }}%)</li>
+    </ul>
+
+    <h4>ファイル構成</h4>
+    <pre style="background-color: #f5f5f5; padding: 1rem; border-radius: 4px;">
+data/webapp/{{ export.export_path }}/
+├── clips/              # 音声ファイル ({{ export.total_recordings }}個)
+├── train.tsv           # 訓練データ ({{ export.train_count }}行)
+├── dev.tsv             # 検証データ ({{ export.dev_count }}行)
+└── test.tsv            # テストデータ ({{ export.test_count }}行)
+    </pre>
+
+    <h4>MLパイプラインでの使用方法</h4>
+    <p>1. <code>configs/data_config.yaml</code> を編集:</p>
+    <pre style="background-color: #f5f5f5; padding: 1rem; border-radius: 4px;">
+dataset:
+  data_dir: ./data/webapp/exports/latest
+  language: ja
+    </pre>
+
+    <p>2. データ前処理と学習を実行:</p>
+    <pre style="background-color: #f5f5f5; padding: 1rem; border-radius: 4px;">
+uv run python scripts/prepare_data.py
+uv run python scripts/train.py
+    </pre>
+
+    <footer>
+        <a href="/datasets/{{ export.id }}" role="button">詳細を見る</a>
+        <a href="/datasets/" role="button" class="secondary">エクスポート一覧へ</a>
+    </footer>
+</article>
+{% else %}
+<article style="background-color: #ffebee; border: 2px solid #e53935;">
+    <header>
+        <h3>❌ エクスポート失敗</h3>
+    </header>
+    <p><strong>エラー:</strong> {{ error }}</p>
+    <footer>
+        <button onclick="location.reload()" class="secondary">戻る</button>
+    </footer>
+</article>
+{% endif %}

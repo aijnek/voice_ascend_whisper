@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}エクスポート履歴 - Voice Ascend Whisper{% endblock %}
+
+{% block content %}
+<main class="container">
+    <h1>データセットエクスポート履歴</h1>
+
+    <p>
+        <a href="/datasets/export" role="button">新規エクスポート</a>
+    </p>
+
+    {% if exports %}
+        {% for export in exports %}
+        <article id="export-{{ export.id }}">
+            <header>
+                <h3>{{ export.name }}</h3>
+                <small>作成日時: {{ export.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</small>
+            </header>
+
+            {% if export.description %}
+            <p>{{ export.description }}</p>
+            {% endif %}
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0;">
+                <div>
+                    <strong>ステータス:</strong>
+                    {% if export.status == 'completed' %}
+                        <span style="color: #4caf50;">✅ 完了</span>
+                    {% elif export.status == 'processing' %}
+                        <span style="color: #ff9800;">⏳ 処理中</span>
+                    {% elif export.status == 'failed' %}
+                        <span style="color: #e53935;">❌ 失敗</span>
+                    {% else %}
+                        <span style="color: #757575;">⏸ 保留中</span>
+                    {% endif %}
+                </div>
+                <div>
+                    <strong>総録音数:</strong> {{ export.total_recordings }}
+                </div>
+            </div>
+
+            {% if export.status == 'completed' %}
+            <details>
+                <summary>詳細情報</summary>
+                <div style="margin-top: 1rem;">
+                    <h4>データ分割</h4>
+                    <ul>
+                        <li>訓練データ: {{ export.train_count }} ({{ export.train_ratio }}%)</li>
+                        <li>検証データ: {{ export.dev_count }} ({{ export.dev_ratio }}%)</li>
+                        <li>テストデータ: {{ export.test_count }} ({{ export.test_ratio }}%)</li>
+                    </ul>
+
+                    <h4>設定</h4>
+                    <ul>
+                        <li>分割戦略: {{ 'ランダム' if export.split_strategy == 'random' else '時系列' }}</li>
+                        {% if export.min_duration %}
+                        <li>最小時間: {{ export.min_duration }}秒</li>
+                        {% endif %}
+                        {% if export.max_duration %}
+                        <li>最大時間: {{ export.max_duration }}秒</li>
+                        {% endif %}
+                        <li>検証済みのみ: {{ 'はい' if export.validated_only else 'いいえ' }}</li>
+                    </ul>
+
+                    <h4>エクスポートパス</h4>
+                    <code style="display: block; background-color: #f5f5f5; padding: 0.5rem; border-radius: 4px;">
+                        data/webapp/{{ export.export_path }}
+                    </code>
+
+                    {% if export.completed_at %}
+                    <p><small>完了日時: {{ export.completed_at.strftime('%Y-%m-%d %H:%M:%S') }}</small></p>
+                    {% endif %}
+                </div>
+            </details>
+            {% elif export.status == 'failed' %}
+            <div style="background-color: #ffebee; padding: 1rem; border-radius: 4px; margin: 1rem 0;">
+                <strong>エラーメッセージ:</strong>
+                <p>{{ export.error_message }}</p>
+            </div>
+            {% endif %}
+
+            <footer>
+                <button
+                    hx-delete="/datasets/{{ export.id }}"
+                    hx-target="#export-{{ export.id }}"
+                    hx-swap="outerHTML"
+                    hx-confirm="このエクスポート「{{ export.name }}」を削除してもよろしいですか？\nファイルも完全に削除されます。"
+                    class="secondary"
+                >
+                    削除
+                </button>
+            </footer>
+        </article>
+        {% endfor %}
+    {% else %}
+        <article>
+            <p>まだエクスポートがありません。</p>
+            <p>
+                <a href="/datasets/export" role="button">最初のエクスポートを作成</a>
+            </p>
+        </article>
+    {% endif %}
+</main>
+{% endblock %}

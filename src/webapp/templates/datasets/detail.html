@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}{{ export.name }} - エクスポート詳細{% endblock %}
+
+{% block content %}
+<main class="container">
+    <h1>エクスポート詳細</h1>
+
+    <article>
+        <header>
+            <h2>{{ export.name }}</h2>
+        </header>
+
+        {% if export.description %}
+        <p>{{ export.description }}</p>
+        {% endif %}
+
+        <h3>基本情報</h3>
+        <table>
+            <tbody>
+                <tr>
+                    <th>ステータス</th>
+                    <td>
+                        {% if export.status == 'completed' %}
+                            <span style="color: #4caf50;">✅ 完了</span>
+                        {% elif export.status == 'processing' %}
+                            <span style="color: #ff9800;">⏳ 処理中</span>
+                        {% elif export.status == 'failed' %}
+                            <span style="color: #e53935;">❌ 失敗</span>
+                        {% else %}
+                            <span style="color: #757575;">⏸ 保留中</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <th>作成日時</th>
+                    <td>{{ export.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                </tr>
+                {% if export.completed_at %}
+                <tr>
+                    <th>完了日時</th>
+                    <td>{{ export.completed_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                </tr>
+                {% endif %}
+                <tr>
+                    <th>エクスポートパス</th>
+                    <td><code>data/webapp/{{ export.export_path }}</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        {% if export.status == 'completed' %}
+        <h3>データ統計</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>分割</th>
+                    <th>録音数</th>
+                    <th>割合</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>訓練データ</td>
+                    <td>{{ export.train_count }}</td>
+                    <td>{{ export.train_ratio }}%</td>
+                </tr>
+                <tr>
+                    <td>検証データ</td>
+                    <td>{{ export.dev_count }}</td>
+                    <td>{{ export.dev_ratio }}%</td>
+                </tr>
+                <tr>
+                    <td>テストデータ</td>
+                    <td>{{ export.test_count }}</td>
+                    <td>{{ export.test_ratio }}%</td>
+                </tr>
+                <tr>
+                    <th>合計</th>
+                    <th>{{ export.total_recordings }}</th>
+                    <th>100%</th>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>エクスポート設定</h3>
+        <table>
+            <tbody>
+                <tr>
+                    <th>分割戦略</th>
+                    <td>{{ 'ランダム分割' if export.split_strategy == 'random' else '時系列分割' }}</td>
+                </tr>
+                {% if export.min_duration %}
+                <tr>
+                    <th>最小録音時間</th>
+                    <td>{{ export.min_duration }}秒</td>
+                </tr>
+                {% endif %}
+                {% if export.max_duration %}
+                <tr>
+                    <th>最大録音時間</th>
+                    <td>{{ export.max_duration }}秒</td>
+                </tr>
+                {% endif %}
+                <tr>
+                    <th>検証済みのみ</th>
+                    <td>{{ 'はい' if export.validated_only else 'いいえ' }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>ファイル構成</h3>
+        <pre style="background-color: #f5f5f5; padding: 1rem; border-radius: 4px;">
+data/webapp/{{ export.export_path }}/
+├── clips/              # 音声ファイル ({{ export.total_recordings }}個)
+├── train.tsv           # 訓練データ ({{ export.train_count }}行)
+├── dev.tsv             # 検証データ ({{ export.dev_count }}行)
+└── test.tsv            # テストデータ ({{ export.test_count }}行)
+        </pre>
+
+        <h3>MLパイプラインでの使用方法</h3>
+        <ol>
+            <li>
+                <strong>データ設定ファイルを編集:</strong>
+                <pre style="background-color: #f5f5f5; padding: 1rem; border-radius: 4px;">
+# configs/data_config.yaml
+dataset:
+  data_dir: ./data/webapp/exports/latest
+  language: ja
+                </pre>
+            </li>
+            <li>
+                <strong>データ前処理:</strong>
+                <pre style="background-color: #f5f5f5; padding: 1rem; border-radius: 4px;">
+uv run python scripts/prepare_data.py
+                </pre>
+            </li>
+            <li>
+                <strong>モデル学習:</strong>
+                <pre style="background-color: #f5f5f5; padding: 1rem; border-radius: 4px;">
+uv run python scripts/train.py
+                </pre>
+            </li>
+        </ol>
+        {% elif export.status == 'failed' %}
+        <h3>エラー情報</h3>
+        <div style="background-color: #ffebee; padding: 1rem; border-radius: 4px;">
+            <strong>エラーメッセージ:</strong>
+            <pre style="background-color: white; padding: 1rem; margin-top: 0.5rem;">{{ export.error_message }}</pre>
+        </div>
+        {% endif %}
+
+        <footer>
+            <a href="/datasets/" role="button" class="secondary">戻る</a>
+        </footer>
+    </article>
+</main>
+{% endblock %}

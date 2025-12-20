@@ -13,7 +13,7 @@ from loguru import logger
 
 from webapp.config import get_settings
 from webapp.database import create_db_and_tables, get_session
-from webapp.routes import texts, recordings, audio
+from webapp.routes import texts, recordings, audio, datasets
 
 
 @asynccontextmanager
@@ -73,6 +73,7 @@ app.state.templates = templates
 app.include_router(texts.router, prefix="/texts", tags=["texts"])
 app.include_router(recordings.router, prefix="/recordings", tags=["recordings"])
 app.include_router(audio.router, prefix="/audio", tags=["audio"])
+app.include_router(datasets.router, prefix="/datasets", tags=["datasets"])
 
 
 @app.get("/")
@@ -90,9 +91,11 @@ async def index(
     """Main dashboard page."""
     from webapp.services.text_service import TextService
     from webapp.services.recording_service import RecordingService
+    from webapp.services.export_service import ExportService
 
     text_count = TextService.count_texts(session)
     recording_count = RecordingService.count_recordings(session)
+    export_count = len(ExportService.get_exports(session))
 
     return app.state.templates.TemplateResponse(
         "index.html",
@@ -100,6 +103,7 @@ async def index(
             "request": request,
             "text_count": text_count,
             "recording_count": recording_count,
+            "export_count": export_count,
         }
     )
 

@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}データセットエクスポート - Voice Ascend Whisper{% endblock %}
+
+{% block content %}
+<main class="container">
+    <h1>データセットエクスポート</h1>
+
+    <article>
+        <header>
+            <h2>録音データ統計</h2>
+        </header>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div>
+                <strong>総録音数:</strong> {{ total_recordings }}
+            </div>
+            <div>
+                <strong>検証済み録音数:</strong> {{ validated_recordings }}
+            </div>
+        </div>
+    </article>
+
+    <article>
+        <header>
+            <h2>エクスポート設定</h2>
+        </header>
+
+        <form
+            hx-post="/datasets/export"
+            hx-target="#export-result"
+            hx-swap="innerHTML"
+        >
+            <label>
+                データセット名 <span style="color: red;">*</span>
+                <input
+                    type="text"
+                    name="name"
+                    placeholder="例: japanese_voice_v1"
+                    required
+                >
+                <small>英数字とアンダースコアのみ推奨</small>
+            </label>
+
+            <label>
+                説明
+                <textarea
+                    name="description"
+                    placeholder="このデータセットの説明（任意）"
+                    rows="3"
+                ></textarea>
+            </label>
+
+            <fieldset>
+                <legend>データ分割比率（合計100%）</legend>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+                    <label>
+                        訓練データ (%)
+                        <input
+                            type="number"
+                            name="train_ratio"
+                            value="80"
+                            min="0"
+                            max="100"
+                            step="1"
+                            required
+                        >
+                    </label>
+                    <label>
+                        検証データ (%)
+                        <input
+                            type="number"
+                            name="dev_ratio"
+                            value="10"
+                            min="0"
+                            max="100"
+                            step="1"
+                            required
+                        >
+                    </label>
+                    <label>
+                        テストデータ (%)
+                        <input
+                            type="number"
+                            name="test_ratio"
+                            value="10"
+                            min="0"
+                            max="100"
+                            step="1"
+                            required
+                        >
+                    </label>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>分割戦略</legend>
+                <label>
+                    <input type="radio" name="split_strategy" value="random" checked>
+                    ランダム分割（推奨）
+                </label>
+                <label>
+                    <input type="radio" name="split_strategy" value="chronological">
+                    時系列分割（古い順に訓練、新しい順にテスト）
+                </label>
+            </fieldset>
+
+            <fieldset>
+                <legend>録音時間フィルター（秒）</legend>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <label>
+                        最小時間（任意）
+                        <input
+                            type="number"
+                            name="min_duration"
+                            placeholder="例: 0.5"
+                            step="0.1"
+                            min="0"
+                        >
+                    </label>
+                    <label>
+                        最大時間（任意）
+                        <input
+                            type="number"
+                            name="max_duration"
+                            placeholder="例: 30"
+                            step="0.1"
+                            min="0"
+                        >
+                    </label>
+                </div>
+            </fieldset>
+
+            <label>
+                <input type="checkbox" name="validated_only" value="true">
+                検証済み録音のみ含める
+            </label>
+
+            <button type="submit">エクスポート実行</button>
+        </form>
+    </article>
+
+    <div id="export-result">
+        <!-- エクスポート結果がここに表示されます -->
+    </div>
+
+    <p>
+        <a href="/datasets/" role="button">エクスポート履歴を見る</a>
+    </p>
+</main>
+{% endblock %}
