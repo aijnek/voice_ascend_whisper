@@ -1,6 +1,6 @@
 dataset:
   data_dir: ./data
-  language: hi
+  language: ja
   sampling_rate: 16000
   max_duration_seconds: 30
   min_duration_seconds: 1

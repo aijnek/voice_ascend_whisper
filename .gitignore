@@ -17,6 +17,11 @@ data/
 *.arrow
 *.cache
 
+# Webapp data (explicit)
+data/webapp/audio/
+data/webapp/database/*.db
+data/webapp/exports/
+
 # Model checkpoints and outputs
 models/
 outputs/

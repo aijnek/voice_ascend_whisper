@@ -1,10 +1,11 @@
 [project]
 name = "voice-ascend-whisper"
 version = "0.1.0"
-description = "Add your description here"
+description = "日本語Whisper finetuning with web data collection interface"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    # ML dependencies
     "accelerate>=0.25.0",
     "datasets[audio]>=2.14.0",
     "evaluate>=0.4.1",
@@ -17,6 +18,16 @@ dependencies = [
     "torch>=2.1.0",
     "tqdm>=4.65.0",
     "transformers>=4.35.0",
+    # Web app dependencies
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "sqlmodel>=0.0.14",
+    "jinja2>=3.1.0",
+    "python-multipart>=0.0.6",
+    "loguru>=0.7.0",
+    "pandas>=2.0.0",
+    "python-dotenv>=1.0.0",
+    "pydantic-settings>=2.0.0",
 ]
 
 [tool.uv]

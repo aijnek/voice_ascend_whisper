@@ -11,9 +11,9 @@ from tqdm import tqdm
 from transformers import WhisperProcessor
 
 from transformers import WhisperForConditionalGeneration
-from voice_ascend_whisper.models.lora_whisper import load_lora_whisper
-from voice_ascend_whisper.utils.device import get_device, clear_mps_cache
-from voice_ascend_whisper.utils.metrics import (
+from finetune_whisper.models.lora_whisper import load_lora_whisper
+from finetune_whisper.utils.device import get_device, clear_mps_cache
+from finetune_whisper.utils.metrics import (
     compute_wer_from_texts,
     compute_detailed_metrics,
 )

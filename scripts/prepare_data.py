@@ -11,7 +11,7 @@ import yaml
 from datasets import Dataset, DatasetDict
 from tqdm import tqdm
 
-from voice_ascend_whisper.data.processor import create_whisper_processor
+from finetune_whisper.data.processor import create_whisper_processor
 
 
 def load_config(config_path: str = "configs/data_config.yaml") -> dict:

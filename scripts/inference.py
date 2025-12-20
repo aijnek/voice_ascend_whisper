@@ -8,8 +8,8 @@ import librosa
 import torch
 from transformers import WhisperProcessor
 
-from voice_ascend_whisper.models.lora_whisper import load_lora_whisper
-from voice_ascend_whisper.utils.device import get_device
+from finetune_whisper.models.lora_whisper import load_lora_whisper
+from finetune_whisper.utils.device import get_device
 
 
 def load_audio(audio_path: str, sampling_rate: int = 16000):

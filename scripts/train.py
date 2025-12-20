@@ -7,11 +7,11 @@ import torch
 from datasets import load_from_disk
 from transformers import Seq2SeqTrainer, Seq2SeqTrainingArguments
 
-from voice_ascend_whisper.models.lora_whisper import create_lora_whisper
-from voice_ascend_whisper.data.processor import create_whisper_processor
-from voice_ascend_whisper.data.collator import DataCollatorSpeechSeq2SeqWithPadding
-from voice_ascend_whisper.utils.device import print_device_info, clear_mps_cache
-from voice_ascend_whisper.utils.metrics import create_compute_metrics
+from finetune_whisper.models.lora_whisper import create_lora_whisper
+from finetune_whisper.data.processor import create_whisper_processor
+from finetune_whisper.data.collator import DataCollatorSpeechSeq2SeqWithPadding
+from finetune_whisper.utils.device import print_device_info, clear_mps_cache
+from finetune_whisper.utils.metrics import create_compute_metrics
 
 
 def load_configs():
